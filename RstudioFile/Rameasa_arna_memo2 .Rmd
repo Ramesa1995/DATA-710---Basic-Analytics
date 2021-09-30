@@ -1,0 +1,72 @@
+---
+title: "Rameasa_arna_memo2"
+author: "Rameasa arna"
+date: "9/23/2021"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Import Data
+
+```{r}
+library(haven)
+library(lattice)
+library(foreign)
+library(dplyr)
+library(ggplot2)
+library(descr)
+
+GSS <- read.dta("/Users/rameasaarna/Desktop/data 710/memo2/GSS1972_2014v12.dta")
+colnames(GSS, do.NULL = TRUE, prefix = "col")
+```
+
+
+
+
+##Graph1
+
+```{r}
+# one avarage ,(negroes/blacks/ african-american ) have worse job, income and housing than white people due to dicsrimination?
+
+histogram(GSS$racdif1, main = " DIFFERENCES DUE TO DISCRIMINATION ", xlab = " ", col = "blue")
+
+table(GSS$racdif1)
+prop.table(table(GSS$racdif1))
+```
+
+
+#Graph2
+
+```{r}
+
+# is it much better for everyone involved if the man is achiever outside the home and the women takes care of the home and family? 
+
+histogram(GSS$fefam, main = "BETTER FOR MAN TO WORK, WOMAN TEND HOME", xlab = " ", col = "light blue")
+
+
+table(GSS$fefam)
+
+
+prop.table(table(GSS$fefam))
+```
+
+
+
+##Graph3
+
+```{r}
+# Would you favor or oppose a law which would require a person to obtain a police permit before he or she could buy a gun?
+
+histogram(GSS$gunlaw, main = "FAVOR OR OPPOSE GUN PERMITS", xlab = "Opinion about Requiring to Obtain a Police Permit before Buying a Gun", col = "blue")
+
+table(GSS$gunlaw)
+
+prop.table(table(GSS$gunlaw))
+```
+
