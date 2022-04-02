@@ -1,0 +1,86 @@
+---
+title: "Memo1"
+author: "Rameasa arna"
+date: "9/9/2021"
+output:
+  word_document: default
+  html_document: default
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Getting Started: Clearing environment and setting working directory
+
+```{r}
+
+# One of the first things you want to do when you start a markdown file is to clear R's the global memory.Running these at the start of the document ensures an empty Global Environment.   
+
+rm(list=ls())
+gc()
+
+directory <- "/Users/rameasaarna/Desktop/data 710/rmd file"
+setwd(directory)
+list.files()
+
+```
+
+
+## Import data
+
+```{r calling in R packages}
+require(lubridate) ##prompts message to install any packages that are missing
+require(tidyverse)
+require(ggrepel) ##only if you want to label data points for the graphs in a way that looks clean
+library(lubridate) ## not tidyverse, but useful package for handling irregular time series data
+library(tidyverse) ## ggplot2, dplyr, tidyr, readr, etc.
+library(ggrepel)
+
+
+Data <- read.csv("/Users/rameasaarna/Desktop/data 710/csv file/COVID19NYC2021.csv")
+
+```
+
+
+## Group 2: Create line graph and histogram of monthly death by borough
+```{r}
+ #Filtering the data
+
+Death_by_Borough = Data%>%
+  select(Month, BX_DEATH_COUNT, BK_DEATH_COUNT,MN_DEATH_COUNT, QN_DEATH_COUNT,SI_DEATH_COUNT)%>%
+  rename(Bronx_Death = "BX_DEATH_COUNT",
+    Brooklyn_Death = "BK_DEATH_COUNT", 
+    Manhattan_Death = "MN_DEATH_COUNT", 
+    Queens_Death = "QN_DEATH_COUNT", 
+    Staten_Island_Death = "SI_DEATH_COUNT") 
+
+# changing wide to long
+
+Long_Death_by_Borough = Death_by_Borough %>%
+  pivot_longer(c(Bronx_Death, Brooklyn_Death , Manhattan_Death, Queens_Death, Staten_Island_Death), names_to = "Borough", values_to = "Cases")
+
+#Ordering the months using lubridate
+
+Long_Death_by_Borough$Month = factor(Long_Death_by_Borough$Month, levels = month.abb)
+
+#Line ggplot
+
+ggplot(data=Long_Death_by_Borough, aes(x=Month, y=Cases, group = Borough, colour = Borough)) +
+    geom_line(size=1) +
+    geom_point( size=1, shape=21, fill="White") +
+  labs(title =" FIgure 1")
+
+#history ggplot
+
+ggplot(data=Long_Death_by_Borough, aes(x=Month, y=Cases, fill = Borough, colour = Borough)) +
+    geom_col()+ 
+   coord_flip()+
+  labs(title =" Figure 2")
+
+  
+```
+
