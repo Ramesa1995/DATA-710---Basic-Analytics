@@ -1,0 +1,155 @@
+---
+title: "Memo5"
+author: "Rameasa arna"
+date: "11/14/2021"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+## Packages Used
+```{r}
+rm(list=ls())   # clear memory
+gc()
+
+library(tidyverse) #importing, cleaning, recoding, and analyzing data
+library(magrittr) # pipe operator
+library(haven) # reading recent versions of stata, spss, sas files. For earlier versions, use the "foreign" package
+library(foreign)
+library(dbplyr)  # anova analysis
+
+
+# uploading data
+student1 = read_dta("/Users/rameasaarna/Desktop/data 710/memo5/students1.dta")
+student2 = read_dta("/Users/rameasaarna/Desktop/data 710/memo5/students2.dta")
+outcome = read_dta("/Users/rameasaarna/Desktop/data 710/memo5/outcomes.dta")
+```
+
+## Combining dataset
+```{r}
+Total_Student = rbind(student1, student2)
+
+Final = merge( Total_Student, outcome, by = "STU_ID", all="TRUE")
+#Final
+```
+
+## Cleaning data
+```{r}
+Final_1 = Final %>%
+  mutate(
+    parents_edu = case_when(
+      BYPARED < 1 ~ as.character(NA),
+      BYPARED == 1 ~ "High Droupout",
+      BYPARED == 2 ~ "High School Graduate",
+      BYPARED >= 3 & BYPARED <= 5 ~ "Some College",
+      BYPARED >= 6 ~ "BA Graduated AND beyond"))%>%
+  mutate(midpoint = case_when(
+    BYP85 == 2 ~ 500, 
+    BYP85 == 3 ~ 3000,     
+    BYP85 == 4 ~ 7500,
+    BYP85 == 5 ~ 12500,
+    BYP85 == 6 ~ 17500,
+    BYP85 == 7 ~ 22500,
+    BYP85 == 8 ~ 30000,
+    BYP85 == 9 ~ 42500,
+    BYP85 == 10 ~ 62500,            #fix this numbers.
+    BYP85 == 11 ~ 87500,
+    BYP85 == 12 ~ 150000,
+    BYP85 == 13 ~ 500100000,
+    BYP85 <= 1 ~ as.double(NA)))%>%
+  mutate(highpovschool = case_when(
+    BY10FLP %in% c(1,2,3,4,5) ~ "Not Over 50% Free Lunch", 
+    BY10FLP %in% c(6,7) ~ "Over 50% Free Lunch",
+    BY10FLP <1 ~ as.character(NA)
+  ))%>%
+  mutate(
+    college = case_when(
+      F3EVRATT< 0 ~ as.character(NA),
+      F3EVRATT == 0 ~ " NO College",
+      F3EVRATT == 1 ~ "College" ))%>%
+  mutate(BYTXMSTD = replace(BYTXMSTD, BYTXMSTD<0, NA))
+
+Final_1$midpoint <- as.integer(Final_1$midpoint)
+
+```
+
+
+```{r}
+#dependent
+#math score == cont  
+# college = categorical,
+
+#independent
+#midpoint = cont
+#highpov = cate,
+#parents edu = cate    one.way <- aov(childs ~ degree, data = GSS)
+```
+
+# math score & parent edu
+```{r}
+math_score_by_soc_cls = aov(BYTXMSTD ~ parents_edu, data = Final_1)         #first = dependent ~ indep
+summary(math_score_by_soc_cls)
+
+
+## Aggregate function: calculating means by group
+
+aggregate(x = Final_1$BYTXMSTD,                      # Specify continuous variable
+          by = list(Final_1$parents_edu),               # Specify grouping variable
+          FUN = mean,                          # Specify function (i.e. mean)
+          na.rm=TRUE)                          # Skips over any NA or missing values. 
+
+
+```
+
+# math score and total family income
+```{r}
+cor.test(Final_1$BYTXMSTD, Final_1$midpoint,  alternative = "greater")
+```
+
+# math score and school poverty
+```{r}
+math_score_by_schl_pov = aov(BYTXMSTD ~ highpovschool  , data = Final_1)         
+summary(math_score_by_schl_pov)
+
+aggregate(x = Final_1$BYTXMSTD,                      
+          by = list(Final_1$highpovschool),              
+          FUN = mean,                         
+          na.rm=TRUE) 
+
+```
+
+# college and poverty
+```{r}
+prop.table(table(Final_1$highpovschool, Final_1$college), 1)
+chisq.test(Final_1$highpovschool, Final_1$college)
+```
+
+#college and parent edu
+```{r}
+prop.table(table(Final_1$parents_edu, Final_1$college), 1)
+chisq.test(Final_1$parents_edu, Final_1$college)
+```
+
+
+# college and midpoint
+
+```{r}
+math_score_by_fam_income = aov(midpoint ~ college, data = Final_1)         #first = dependent ~ indep
+summary(math_score_by_fam_income)
+
+
+## Aggregate function: calculating means by group
+
+aggregate(x = Final_1$midpoint,                      # Specify continuous variable
+          by = list(Final_1$college),               # Specify grouping variable
+          FUN = mean,                          # Specify function (i.e. mean)
+          na.rm=TRUE)                          # Skips over any NA or missing values. 
+
+```
+
